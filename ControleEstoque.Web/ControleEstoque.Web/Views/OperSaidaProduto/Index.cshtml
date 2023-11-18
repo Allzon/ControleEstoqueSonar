@@ -1,0 +1,92 @@
+﻿@{
+    ViewBag.Title = "Saída de Produtos";
+}
+
+@section Styles {
+    <link href="~/Content/Operacao/SaidaProduto.css" rel="stylesheet" />
+}
+
+<div class="row">
+    <div style="margin: 15px" class="col-md-12">
+        <div id="saida_produtos" class="col-md-6 col-md-offset-3">
+            <h3 class="text-center">@ViewBag.Title</h3>
+            <hr />
+            <div id="msg_mensagem_aviso" class="text-danger invisivel"></div>
+            <fieldset>
+                @Html.AntiForgeryToken()
+                <div class="row">
+                    <div class="col-md-6">
+                        @Html.Label("txt_data", "Data", new { @class = "control-label" })
+                        @Html.TextBox("txt_data", null, new { @class = "form-control", type = "date" })
+                    </div>
+                    <div class="col-md-6">
+                        @Html.Label("txt_numero", "Número", new { @class = "control-label" })
+                        @Html.TextBox("txt_numero", null, new { @class = "form-control", @readonly = "readonly" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <a id="btn_incluir" class="btn btn-success" role="button">
+                            <i class="glyphicon glyphicon-plus"></i> Incluir Produto
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <table id="grid" class="table table-bordered table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Estoque</th>
+                                    <th>Quantidade</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <a id="btn_cancelar" class="btn btn-default" role="button">
+                            <i class="glyphicon glyphicon-remove"></i> Cancelar
+                        </a>
+                        <a id="btn_salvar" class="btn btn-primary" role="button">
+                            <i class="glyphicon glyphicon-ok"></i> Salvar
+                        </a>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/Scripts/mustache.min.js"></script>
+    <script src="~/Scripts/Operacao/SaidaProduto.js"></script>
+    <script>
+        var url_salvar = '@Url.Action("Salvar", "OperSaidaProduto")',
+            url_recuperar_quantidade_estoque_produto = '@Url.Action("RecuperarQuantidadeEstoqueProduto", "CadProduto")';
+    </script>
+    <script id="template-produto" type="x-tmpl-mustache">
+        <tr>
+            <td>
+                <select class="form-control" id="ddl_produto_{{ Sequencia }}">
+                    @foreach (var produto in ViewBag.Produtos)
+                    {
+                        <option value="@produto.Id">@produto.Nome</option>
+                    }
+                </select>
+            </td>
+            <td class="quant-estoque"></td>
+            <td>
+                <input type="number" id="txt_quantidade_{{ Sequencia }}" class="form-control" value="" min="0" />
+            </td>
+            <td>
+                <a class="btn btn-warning btn_remover" role="button">
+                    <i class="glyphicon glyphicon-trash"></i>
+                </a>
+            </td>
+        </tr>
+    </script>
+}
