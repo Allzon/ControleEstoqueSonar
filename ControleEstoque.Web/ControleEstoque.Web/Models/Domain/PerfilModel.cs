@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -46,31 +47,27 @@ namespace ControleEstoque.Web.Models
             var ret = new List<PerfilModel>();
 
             using (var db = new ContextoBD())
-            {
-                var pos = (pagina - 1) * tamPagina;
-
-                var filtroWhere = "";
+            {                
                 var parameters = new DynamicParameters();
+                var sql = new StringBuilder("SELECT * FROM perfil ");
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = " WHERE LOWER(nome) LIKE @filtro";
+                    sql.Append(" WHERE LOWER(nome) LIKE @filtro");
                     parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
-                var paginacao = "";
+                if (!string.IsNullOrEmpty(ordem))
+                    sql.Append(" ORDER BY " + ordem);
+                else
+                    sql.Append(" ORDER BY c.nome");
+
                 if (pagina > 0 && tamPagina > 0)
                 {
-                    paginacao = string.Format(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
-                       pos > 0 ? pos - 1 : 0, tamPagina);
+                    var pos = (pagina - 1) * tamPagina;
+                    sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
                 }
 
-                var sql =
-                    "select * from perfil " +
-                    filtroWhere +
-                    " order by " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
-                    paginacao;
-
-                ret = db.Database.Connection.Query<PerfilModel>(sql, parameters).ToList();
+                ret = db.Database.Connection.Query<PerfilModel>(sql.ToString(), parameters).ToList();
             }
             return ret;
         }

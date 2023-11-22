@@ -3,6 +3,7 @@ using ControleEstoque.Web.Helpers;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -61,31 +62,29 @@ namespace ControleEstoque.Web.Models
 
             using (var db = new ContextoBD())
             {
-                var filtroWhere = "";
                 var parameters = new DynamicParameters();
+                var sql = new StringBuilder("SELECT * FROM Usuario ");
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = " WHERE LOWER(nome) LIKE @filtro";
+                    sql.Append(" WHERE LOWER(nome) LIKE @filtro");
                     parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
-
-                string sql;
-                if (pagina == -1 || tamPagina == -1)
-                {
-                    sql = "SELECT * FROM Usuario" + filtroWhere + " ORDER BY " +
-                        (!string.IsNullOrEmpty(ordem) ? ordem : "nome");
-                }
+                
+                if (!string.IsNullOrEmpty(ordem))
+                    sql.Append(" ORDER BY " + ordem);
                 else
+                    sql.Append(" ORDER BY c.nome");
+
+                if (pagina != -1 || tamPagina != -1)
                 {
-                    var pos = (pagina - 1) * tamPagina;
-                    sql = string.Format(
-                        "SELECT * FROM Usuario " +
-                        filtroWhere +
-                        " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
-                        " OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
-                        pos > 0 ? pos - 1 : 0, tamPagina);
+                    if (pagina > 0 && tamPagina > 0)
+                    {
+                        var pos = (pagina - 1) * tamPagina;
+                        sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
+                    }
                 }
-                ret = db.Database.Connection.Query<UsuarioModel>(sql, parameters).ToList();
+
+                ret = db.Database.Connection.Query<UsuarioModel>(sql.ToString(), parameters).ToList();
             }
             return ret;
         }

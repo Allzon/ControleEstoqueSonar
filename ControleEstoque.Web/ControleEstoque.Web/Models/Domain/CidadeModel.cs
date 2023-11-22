@@ -74,13 +74,9 @@ namespace ControleEstoque.Web.Models
                 }
 
                 if (!string.IsNullOrEmpty(ordem))
-                {
                     sql.Append(" ORDER BY " + ordem);
-                }
                 else
-                {
                     sql.Append(" ORDER BY c.nome");
-                }
 
                 if (pagina > 0 && tamPagina > 0)
                 {

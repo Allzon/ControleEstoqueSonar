@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -53,29 +54,27 @@ namespace ControleEstoque.Web.Models
 
             using (var db = new ContextoBD())
             {                
-                var filtroWhere = "";
+                
                 var parameters = new DynamicParameters();
+                var sql = new StringBuilder("SELECT * FROM tb_locaisArmazenamentos ");
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = " WHERE LOWER(nome) LIKE @filtro";
+                    sql.Append(" WHERE LOWER(nome) LIKE @filtro");
                     parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
-                var paginacao = "";
-                var pos = (pagina - 1) * tamPagina;
-
+                if (!string.IsNullOrEmpty(ordem))                
+                    sql.Append(" ORDER BY " + ordem);                
+                else                
+                    sql.Append(" ORDER BY c.nome");
+                
                 if (pagina > 0 && tamPagina > 0)
                 {
-                    paginacao = string.Format(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
-                       pos > 0 ? pos - 1 : 0, tamPagina);
+                    var pos = (pagina - 1) * tamPagina;
+                    sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
                 }
-                
-                var sql =
-                    "SELECT * FROM tb_locaisArmazenamentos " +
-                    filtroWhere +
-                    " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
-                    paginacao;
-                ret = db.Database.Connection.Query<LocalArmazenamentoModel>(sql, parameters).ToList();
+
+                ret = db.Database.Connection.Query<LocalArmazenamentoModel>(sql.ToString(), parameters).ToList();
             }
 
             return ret;

@@ -3,6 +3,7 @@ using Dapper;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -54,25 +55,27 @@ namespace ControleEstoque.Web.Models
             var ret = new List<GrupoProdutoModel>();
 
             using (var db = new ContextoBD())
-            {
-                var filtroWhere = "";
+            {                
                 var parameters = new DynamicParameters();
+                var sql = new StringBuilder("SELECT * FROM tb_grupoProdutos ");
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = " WHERE LOWER(nome) LIKE @filtro";
+                    sql.Append(" WHERE LOWER(nome) LIKE @filtro");
                     parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
-                var pos = (pagina - 1) * tamPagina;
+                if (!string.IsNullOrEmpty(ordem))
+                    sql.Append(" ORDER BY " + ordem);
+                else
+                    sql.Append(" ORDER BY c.nome");
 
-                var sql = string.Format(
-                    "SELECT * FROM tb_grupoProdutos " +
-                    filtroWhere +
-                    " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
-                    " OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
-                    pos, tamPagina);
+                if (pagina > 0 && tamPagina > 0)
+                {
+                    var pos = (pagina - 1) * tamPagina;
+                    sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
+                }
 
-                ret = db.Database.Connection.Query<GrupoProdutoModel>(sql, parameters).ToList();
+                ret = db.Database.Connection.Query<GrupoProdutoModel>(sql.ToString(), parameters).ToList();
             }
 
             return ret;

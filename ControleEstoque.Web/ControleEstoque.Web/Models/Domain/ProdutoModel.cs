@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -51,38 +52,35 @@ namespace ControleEstoque.Web.Models
             var ret = new List<ProdutoModel>();
 
             using (var db = new ContextoBD())
-            {
-                var filtroWhere = "";
+            {                
                 var parameters = new DynamicParameters();
+                var sql = new StringBuilder("select id, codigo, nome, ativo, imagem, preco_custo as PrecoCusto, preco_venda as PrecoVenda, " +
+                    "quant_estoque as QuantEstoque, id_unidade_medida as IdUnidadeMedida, id_grupo as IdGrupo, id_marca as IdMarca, id_fornecedor as IdFornecedor, " +
+                    "id_local_armazenamento as IdLocalArmazenamento from produto");
+
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = "where (lower(nome) like @filtro) ";
+                    sql.Append("where (lower(nome) like @filtro) ");
                     parameters.Add("@filtro", $"%{filtro.ToLower()}%");
                 }
 
                 if (somenteAtivos)
                 {
-                    filtroWhere = (string.IsNullOrEmpty(filtroWhere) ? "where" : "and ") + "(ativo = 1) ";
+                    sql.Append((string.IsNullOrEmpty(filtro) ? "where" : "and ") + "(ativo = 1) ");
                 }
 
-                var pos = (pagina - 1) * tamPagina;
-                var paginacao = "";
+                if (!string.IsNullOrEmpty(ordem))
+                    sql.Append(" ORDER BY " + ordem);
+                else
+                    sql.Append(" ORDER BY c.nome");
+
                 if (pagina > 0 && tamPagina > 0)
                 {
-                    paginacao = string.Format(" offset {0} rows fetch next {1} rows only",
-                        pos > 0 ? pos - 1 : 0, tamPagina);
+                    var pos = (pagina - 1) * tamPagina;
+                    sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
                 }
 
-                var sql =
-                    "select id, codigo, nome, ativo, imagem, preco_custo as PrecoCusto, preco_venda as PrecoVenda, " +
-                    "quant_estoque as QuantEstoque, id_unidade_medida as IdUnidadeMedida, id_grupo as IdGrupo, " +
-                    "id_marca as IdMarca, id_fornecedor as IdFornecedor, id_local_armazenamento as IdLocalArmazenamento " +
-                    "from produto " +
-                    filtroWhere +
-                    "order by " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
-                    paginacao;
-
-                ret = db.Database.Connection.Query<ProdutoModel>(sql, parameters).ToList();
+                ret = db.Database.Connection.Query<ProdutoModel>(sql.ToString(), parameters).ToList();
             }
 
             return ret;

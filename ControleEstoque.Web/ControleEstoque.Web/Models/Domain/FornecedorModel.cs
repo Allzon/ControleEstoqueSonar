@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -81,29 +82,25 @@ namespace ControleEstoque.Web.Models
 
             using (var db = new ContextoBD())
             {
-
-                var filtroWhere = "";
                 var parametros = new DynamicParameters();
+                var sql = new StringBuilder("SELECT * FROM Fornecedor");                
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = " WHERE LOWER(nome) LIKE @filtro";
+                    sql.Append(" WHERE LOWER(nome) LIKE @filtro");
                     parametros.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
+                if (!string.IsNullOrEmpty(ordem))                
+                    sql.Append(" ORDER BY " + ordem);                
+                else                
+                    sql.Append(" ORDER BY c.nome");                
 
-                var paginacao = "";
-                var pos = (pagina - 1) * tamPagina;
                 if (pagina > 0 && tamPagina > 0)
                 {
-                    paginacao = string.Format(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
-                    pos > 0 ? pos - 1 : 0, tamPagina);
+                    var pos = (pagina - 1) * tamPagina;
+                    sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
                 }
 
-                var sql =
-                    "SELECT * FROM Fornecedor" +
-                    filtroWhere +
-                    " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
-                    paginacao;
-                ret = db.Database.Connection.Query<FornecedorModel>(sql, parametros).ToList();
+                ret = db.Database.Connection.Query<FornecedorModel>(sql.ToString(), parametros).ToList();                
             }
 
             return ret;
