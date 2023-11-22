@@ -32,9 +32,8 @@ namespace ControleEstoque.Web.Models
                     }
                 };
             }
-            catch (Exception)
+            catch
             {
-                throw;
             }
 
             return ret;
