@@ -66,7 +66,7 @@ namespace ControleEstoque.Web.Models
                 if (!string.IsNullOrEmpty(filtro))
                 {
                     sql.Append(" WHERE LOWER(nome) LIKE @filtro");
-                    parameters.Add("@filtro", $"'%{filtro.ToLower()}%'" );
+                    parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
                 if (idPais > 0)
@@ -75,10 +75,7 @@ namespace ControleEstoque.Web.Models
                     parameters.Add("@id_pais", idPais);
                 }
 
-                if (!string.IsNullOrEmpty(ordem))                
-                    sql.Append(" ORDER BY " + ordem);                
-                else                
-                    sql.Append(" ORDER BY c.nome");
+                sql.AppendFormat(" ORDER BY {0}", !string.IsNullOrEmpty(ordem) ? ordem : "c.nome");
 
                 if (pagina > 0 && tamPagina > 0)
                 {

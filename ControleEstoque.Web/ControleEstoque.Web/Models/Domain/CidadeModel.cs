@@ -73,10 +73,7 @@ namespace ControleEstoque.Web.Models
                     parameters.Add("@Id_Estado", idEstado);
                 }
 
-                if (!string.IsNullOrEmpty(ordem))
-                    sql.Append(" ORDER BY " + ordem);
-                else
-                    sql.Append(" ORDER BY c.nome");
+                sql.AppendFormat(" ORDER BY {0}", !string.IsNullOrEmpty(ordem) ? ordem : "c.nome");
 
                 if (pagina > 0 && tamPagina > 0)
                 {
