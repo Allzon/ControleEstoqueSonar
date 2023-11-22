@@ -121,7 +121,7 @@ namespace ControleEstoque.Web.Controllers
                     }
                 }
                 // Erro de excessão
-                catch (Exception ex)
+                catch (Exception)
                 {
                     // Popula a variável resultado com "ERRO"
                     resultado = "ERRO";

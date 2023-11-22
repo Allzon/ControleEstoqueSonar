@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Globalization;
 using System.Linq;
 
 namespace ControleEstoque.Web.Models
@@ -243,6 +244,7 @@ namespace ControleEstoque.Web.Models
             }
             catch (Exception ex)
             {
+                throw ex;
             }
 
             return ret;
@@ -294,7 +296,7 @@ namespace ControleEstoque.Web.Models
                     db.SaveChanges();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 ret = false;
             }
@@ -347,7 +349,7 @@ namespace ControleEstoque.Web.Models
         {
             var ret = new List<ProdutoComDiferencaEmInventarioViewModel>();
 
-            var data = DateTime.ParseExact(inventario.Split(',')[0], "dd/MM/yyyy", null);
+            var data = DateTime.Parse(inventario.Split(',')[0], new CultureInfo("en-US"));
             var idLocal = Int32.Parse(inventario.Split(',')[1]);
 
             using (var db = new ContextoBD())
@@ -386,7 +388,7 @@ namespace ControleEstoque.Web.Models
                     db.SaveChanges();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 ret = false;
             }

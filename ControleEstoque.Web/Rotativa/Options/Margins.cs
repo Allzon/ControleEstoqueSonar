@@ -10,22 +10,27 @@ namespace Rotativa.Options
         /// <summary>
         /// Page bottom margin in mm.
         /// </summary>
-        [OptionFlag("-B")] public int? Bottom;
+        [OptionFlag("-B")] private int? bottom;
 
         /// <summary>
         /// Page left margin in mm.
         /// </summary>
-        [OptionFlag("-L")] public int? Left;
+        [OptionFlag("-L")] private int? left;
 
         /// <summary>
         /// Page right margin in mm.
         /// </summary>
-        [OptionFlag("-R")] public int? Right;
+        [OptionFlag("-R")] private int? right;
 
         /// <summary>
         /// Page top margin in mm.
         /// </summary>
-        [OptionFlag("-T")] public int? Top;
+        [OptionFlag("-T")] private int? top;
+
+        public int? Bottom { get => bottom; set => bottom = value; }
+        public int? Left { get => left; set => left = value; }
+        public int? Right { get => right; set => right = value; }
+        public int? Top { get => top; set => top = value; }
 
         public Margins()
         {
@@ -53,7 +58,7 @@ namespace Rotativa.Options
             FieldInfo[] fields = GetType().GetFields();
             foreach (FieldInfo fi in fields)
             {
-                var of = fi.GetCustomAttributes(typeof(OptionFlag), true).FirstOrDefault() as OptionFlag;
+                var of = fi.GetCustomAttributes(typeof(OptionFlagAttribute), true).FirstOrDefault() as OptionFlagAttribute;
                 if (of == null)
                     continue;
 
