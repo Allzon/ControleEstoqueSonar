@@ -242,7 +242,7 @@ namespace ControleEstoque.Web.Models
                     }
                 }
             }
-            catch
+            catch (Exception)
             {
             }
 
