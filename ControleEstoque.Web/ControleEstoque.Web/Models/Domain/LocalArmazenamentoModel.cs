@@ -52,14 +52,13 @@ namespace ControleEstoque.Web.Models
             var ret = new List<LocalArmazenamentoModel>();
 
             using (var db = new ContextoBD())
-            {
-                //conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
-                //conexao.Open();
-
+            {                
                 var filtroWhere = "";
+                var parameters = new DynamicParameters();
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = string.Format(" WHERE LOWER(nome) LIKE '%{0}%'", filtro.ToLower());
+                    filtroWhere = " WHERE LOWER(nome) LIKE @filtro";
+                    parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
                 var paginacao = "";
@@ -70,21 +69,13 @@ namespace ControleEstoque.Web.Models
                     paginacao = string.Format(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
                        pos > 0 ? pos - 1 : 0, tamPagina);
                 }
-
-                //comando.Connection = conexao;
-                //comando.CommandText =
+                
                 var sql =
                     "SELECT * FROM tb_locaisArmazenamentos " +
                     filtroWhere +
                     " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
                     paginacao;
-                ret = db.Database.Connection.Query<LocalArmazenamentoModel>(sql).ToList();
-                //var reader = comando.ExecuteReader();
-
-                //while (reader.Read())
-                //{
-                //    ret.Add(MontarLocalArmazenamento(reader));
-                //}
+                ret = db.Database.Connection.Query<LocalArmazenamentoModel>(sql, parameters).ToList();
             }
 
             return ret;

@@ -59,16 +59,18 @@ namespace ControleEstoque.Web.Models
             using (var db = new ContextoBD())
             {
                 var filtroWhere = "";
+                var parameters = new DynamicParameters();
+
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = string.Format(" WHERE LOWER(nome) LIKE '%{0}%'", filtro.ToLower());
+                    filtroWhere = " WHERE LOWER(nome) LIKE @filtro";
+                    parameters.Add("@filtro", $"'%{filtro.ToLower()}%'" );
                 }
 
                 if (idPais > 0)
                 {
-                    filtroWhere +=
-                        (string.IsNullOrEmpty(filtroWhere) ? " WHERE" : " AND") +
-                        string.Format(" id_pais = {0}", idPais);
+                    filtroWhere += (string.IsNullOrEmpty(filtroWhere) ? " WHERE" : " AND") + " id_pais = @id_pais";
+                    parameters.Add("@id_pais", idPais);
                 }
 
                 var paginacao = "";
@@ -79,20 +81,12 @@ namespace ControleEstoque.Web.Models
                        pos > 0 ? pos - 1 : 0, tamPagina);
                 }
 
-                //comando.Connection = conexao;
-                //comando.CommandText =
                 var sql =
                     "SELECT * FROM estado " +
                     filtroWhere +
                     " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
                     paginacao;
-                ret = db.Database.Connection.Query<EstadoModel>(sql).ToList();
-                //var reader = comando.ExecuteReader();
-
-                //while (reader.Read())
-                //{
-                //    ret.Add(MontarEstado(reader));
-                //}
+                ret = db.Database.Connection.Query<EstadoModel>(sql, parameters).ToList();
             }
 
             return ret;

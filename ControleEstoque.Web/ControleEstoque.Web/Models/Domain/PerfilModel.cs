@@ -50,9 +50,11 @@ namespace ControleEstoque.Web.Models
                 var pos = (pagina - 1) * tamPagina;
 
                 var filtroWhere = "";
+                var parameters = new DynamicParameters();
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = string.Format(" WHERE LOWER(nome) LIKE '%{0}%'", filtro.ToLower());
+                    filtroWhere = " WHERE LOWER(nome) LIKE @filtro";
+                    parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
                 var paginacao = "";
@@ -67,7 +69,8 @@ namespace ControleEstoque.Web.Models
                     filtroWhere +
                     " order by " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
                     paginacao;
-                ret = db.Database.Connection.Query<PerfilModel>(sql).ToList();
+
+                ret = db.Database.Connection.Query<PerfilModel>(sql, parameters).ToList();
             }
             return ret;
         }

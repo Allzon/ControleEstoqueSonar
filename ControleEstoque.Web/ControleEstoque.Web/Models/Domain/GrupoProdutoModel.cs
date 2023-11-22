@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using ControleEstoque.Web.ServicesCorreios;
+using Dapper;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
@@ -54,19 +55,16 @@ namespace ControleEstoque.Web.Models
 
             using (var db = new ContextoBD())
             {
-                //conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
-                //conexao.Open();
-
                 var filtroWhere = "";
+                var parameters = new DynamicParameters();
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = string.Format(" WHERE LOWER(nome) LIKE '%{0}%'", filtro.ToLower());
+                    filtroWhere = " WHERE LOWER(nome) LIKE @filtro";
+                    parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
                 var pos = (pagina - 1) * tamPagina;
 
-                //comando.Connection = conexao;
-                //comando.CommandText =
                 var sql = string.Format(
                     "SELECT * FROM tb_grupoProdutos " +
                     filtroWhere +
@@ -74,13 +72,7 @@ namespace ControleEstoque.Web.Models
                     " OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
                     pos, tamPagina);
 
-                ret = db.Database.Connection.Query<GrupoProdutoModel>(sql).ToList();
-                //var reader = comando.ExecuteReader();
-
-                //while (reader.Read())
-                //{
-                //    ret.Add(MontarGrupoProduto(reader));
-                //}
+                ret = db.Database.Connection.Query<GrupoProdutoModel>(sql, parameters).ToList();
             }
 
             return ret;

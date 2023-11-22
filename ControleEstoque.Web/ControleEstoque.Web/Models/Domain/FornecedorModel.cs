@@ -81,13 +81,13 @@ namespace ControleEstoque.Web.Models
 
             using (var db = new ContextoBD())
             {
-                //conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
-                //conexao.Open();
 
                 var filtroWhere = "";
+                var parametros = new DynamicParameters();
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = string.Format(" WHERE LOWER(nome) LIKE '%{0}%'", filtro.ToLower());
+                    filtroWhere = " WHERE LOWER(nome) LIKE @filtro";
+                    parametros.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
                 var paginacao = "";
@@ -98,20 +98,12 @@ namespace ControleEstoque.Web.Models
                     pos > 0 ? pos - 1 : 0, tamPagina);
                 }
 
-                //comando.Connection = conexao;
-                //comando.CommandText =
                 var sql =
                     "SELECT * FROM Fornecedor" +
                     filtroWhere +
                     " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
                     paginacao;
-                ret = db.Database.Connection.Query<FornecedorModel>(sql).ToList();
-                //var reader = comando.ExecuteReader();
-
-                //while (reader.Read())
-                //{
-                //    ret.Add(MontarFornecedor(reader));
-                //}
+                ret = db.Database.Connection.Query<FornecedorModel>(sql, parametros).ToList();
             }
 
             return ret;

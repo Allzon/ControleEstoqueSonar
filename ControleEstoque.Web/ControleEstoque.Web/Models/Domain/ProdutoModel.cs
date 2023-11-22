@@ -53,9 +53,11 @@ namespace ControleEstoque.Web.Models
             using (var db = new ContextoBD())
             {
                 var filtroWhere = "";
+                var parameters = new DynamicParameters();
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = string.Format("where (lower(nome) like '%{0}%') ", filtro.ToLower());
+                    filtroWhere = "where (lower(nome) like @filtro) ";
+                    parameters.Add("@filtro", $"%{filtro.ToLower()}%");
                 }
 
                 if (somenteAtivos)
@@ -80,7 +82,7 @@ namespace ControleEstoque.Web.Models
                     "order by " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
                     paginacao;
 
-                ret = db.Database.Connection.Query<ProdutoModel>(sql).ToList();
+                ret = db.Database.Connection.Query<ProdutoModel>(sql, parameters).ToList();
             }
 
             return ret;
