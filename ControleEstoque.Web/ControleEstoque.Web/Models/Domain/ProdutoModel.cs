@@ -213,37 +213,30 @@ namespace ControleEstoque.Web.Models
         public static string SalvarPedido(DateTime data, Dictionary<int, int> produtos, string nomeTabela, bool entrada)
         {
             var ret = "";
-
-            try
+            using (var db = new ContextoBD())
             {
-                using (var db = new ContextoBD())
+                db.Database.Connection.Open();
+
+                var numPedido = db.Database.Connection.ExecuteScalar<int>($"select next value for sec_{nomeTabela}").ToString("D10");
+
+                using (var transacao = db.Database.Connection.BeginTransaction())
                 {
-                    db.Database.Connection.Open();
-
-                    var numPedido = db.Database.Connection.ExecuteScalar<int>($"select next value for sec_{nomeTabela}").ToString("D10");
-
-                    using (var transacao = db.Database.Connection.BeginTransaction())
+                    foreach (var produto in produtos)
                     {
-                        foreach (var produto in produtos)
-                        {
-                            var sql = $"insert into {nomeTabela} (numero, data, id_produto, quant) values (@numero, @data, @id_produto, @quant)";
-                            var parametrosInsert = new { numero = numPedido, data, id_produto = produto.Key, quant = produto.Value };
-                            db.Database.Connection.Execute(sql, parametrosInsert, transacao);
+                        var sql = $"insert into {nomeTabela} (numero, data, id_produto, quant) values (@numero, @data, @id_produto, @quant)";
+                        var parametrosInsert = new { numero = numPedido, data, id_produto = produto.Key, quant = produto.Value };
+                        db.Database.Connection.Execute(sql, parametrosInsert, transacao);
 
-                            var sinal = (entrada ? "+" : "-");
-                            sql = $"update produto set quant_estoque = quant_estoque {sinal} @quant_estoque where (id = @id)";
-                            var parametrosUpdate = new { id = produto.Key, quant_estoque = produto.Value };
-                            db.Database.Connection.Execute(sql, parametrosUpdate, transacao);
-                        }
-
-                        transacao.Commit();
-
-                        ret = numPedido;
+                        var sinal = (entrada ? "+" : "-");
+                        sql = $"update produto set quant_estoque = quant_estoque {sinal} @quant_estoque where (id = @id)";
+                        var parametrosUpdate = new { id = produto.Key, quant_estoque = produto.Value };
+                        db.Database.Connection.Execute(sql, parametrosUpdate, transacao);
                     }
+
+                    transacao.Commit();
+
+                    ret = numPedido;
                 }
-            }
-            catch (Exception)
-            {
             }
 
             return ret;
