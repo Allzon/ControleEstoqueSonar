@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Web.Mvc;
 
 namespace ControleEstoque.Web.Models
@@ -19,7 +20,7 @@ namespace ControleEstoque.Web.Models
 
             try
             {
-                ret.Data = DateTime.ParseExact(valores.Get("data"), "yyyy-MM-dd", null);
+                ret.Data = DateTime.Parse(valores.Get("data"), new CultureInfo("en-US"));
 
                 if (!string.IsNullOrEmpty(valores.Get("produtos")))
                 {
