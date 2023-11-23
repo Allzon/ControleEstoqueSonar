@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -42,28 +43,19 @@ namespace ControleEstoque.Web.Models
             var ret = new List<UnidadeMedidaModel>();
 
             using (var db = new ContextoBD())
-            {
-                var filtroWhere = "";
+            {                
+                var parameters = new DynamicParameters();
+                var sql = new StringBuilder("SELECT * FROM tb_unidadesMedidas ");
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = string.Format(" WHERE LOWER(nome) LIKE '%{0}%'", filtro.ToLower());
+                    UtilBD.AppendFiltro(ref sql);
+                    parameters.Add(@"filtro", $"'%{filtro.ToLower()}%'");
                 }
 
-                var paginacao = "";
-                var pos = (pagina - 1) * tamPagina;
-
-                if (pagina > 0 && tamPagina > 0)
-                {
-                    paginacao = string.Format(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
-                       pos > 0 ? pos - 1 : 0, tamPagina);
-                }
-
-                var sql =
-                     "SELECT * FROM tb_unidadeMedida " +
-                     filtroWhere +
-                     " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
-                     paginacao;
-                ret = db.Database.Connection.Query<UnidadeMedidaModel>(sql).ToList();
+                UtilBD.AppendOrdem(ref sql, ordem);
+                UtilBD.AppendPaginacao(ref sql, pagina, tamPagina);
+                
+                ret = db.Database.Connection.Query<UnidadeMedidaModel>(sql.ToString(), parameters).ToList();
             }
             return ret;
         }
