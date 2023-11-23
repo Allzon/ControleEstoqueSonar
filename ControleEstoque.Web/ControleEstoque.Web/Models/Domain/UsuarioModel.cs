@@ -72,13 +72,10 @@ namespace ControleEstoque.Web.Models
                 
                 sql.AppendFormat(" ORDER BY {0}", !string.IsNullOrEmpty(ordem) ? ordem : "c.nome");
 
-                if (pagina != -1 || tamPagina != -1)
+                if ((pagina != -1 || tamPagina != -1) && pagina > 0 && tamPagina > 0)
                 {
-                    if (pagina > 0 && tamPagina > 0)
-                    {
-                        var pos = (pagina - 1) * tamPagina;
-                        sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
-                    }
+                    var pos = (pagina - 1) * tamPagina;
+                    sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
                 }
 
                 ret = db.Database.Connection.Query<UsuarioModel>(sql.ToString(), parameters).ToList();
