@@ -60,7 +60,7 @@ namespace ControleEstoque.Web.Models
 
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    sql.Append("where (lower(nome) like @filtro) ");
+                    UtilBD.AppendFiltro(ref sql);
                     parameters.Add("@filtro", $"%{filtro.ToLower()}%");
                 }
 
@@ -69,16 +69,8 @@ namespace ControleEstoque.Web.Models
                     sql.Append((string.IsNullOrEmpty(filtro) ? "where" : "and ") + "(ativo = 1) ");
                 }
 
-                if (!string.IsNullOrEmpty(ordem))
-                    sql.Append(" ORDER BY " + ordem);
-                else
-                    sql.Append(" ORDER BY c.nome");
-
-                if (pagina > 0 && tamPagina > 0)
-                {
-                    var pos = (pagina - 1) * tamPagina;
-                    sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
-                }
+                UtilBD.AppendOrdem(ref sql, ordem);
+                UtilBD.AppendPaginacao(ref sql, pagina, tamPagina);
 
                 ret = db.Database.Connection.Query<ProdutoModel>(sql.ToString(), parameters).ToList();
             }

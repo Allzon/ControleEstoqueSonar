@@ -86,17 +86,12 @@ namespace ControleEstoque.Web.Models
                 var sql = new StringBuilder("SELECT * FROM Fornecedor");                
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    sql.Append(" WHERE LOWER(nome) LIKE @filtro");
+                    UtilBD.AppendFiltro(ref sql);
                     parametros.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
-                sql.AppendFormat(" ORDER BY {0}", !string.IsNullOrEmpty(ordem) ? ordem : "c.nome");
-
-                if (pagina > 0 && tamPagina > 0)
-                {
-                    var pos = (pagina - 1) * tamPagina;
-                    sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
-                }
+                UtilBD.AppendFiltro(ref sql);
+                UtilBD.AppendOrdem(ref sql, ordem);
 
                 ret = db.Database.Connection.Query<FornecedorModel>(sql.ToString(), parametros).ToList();                
             }

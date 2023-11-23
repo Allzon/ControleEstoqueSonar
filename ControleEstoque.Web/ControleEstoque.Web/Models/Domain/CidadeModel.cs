@@ -60,17 +60,20 @@ namespace ControleEstoque.Web.Models
             {
                 var parameters = new DynamicParameters();
                 var sql = new StringBuilder("SELECT c.id, c.nome, c.ativo, c.id_estado as IdEstado, e.id_pais as IdPais, e.nome as NomeEstado, p.nome as NomePais FROM cidade c, estado e, pais p WHERE (c.id_estado = e.id) AND (e.id_pais = p.id)");
-
-                UtilBD.AppendFiltro(ref sql);
-                parameters.Add("@filtro", $"%{filtro.ToLower()}%");
-
+                
+                if (!string.IsNullOrEmpty(filtro))
+                {
+                    UtilBD.AppendFiltro(ref sql);
+                    parameters.Add("@filtro", $"%{filtro.ToLower()}%");
+                }
+                
                 if (idEstado > 0)
                 {
                     sql.Append(" AND (id_estado = @Id_Estado)");
                     parameters.Add("@Id_Estado", idEstado);
                 }
 
-                UtilBD.AppendOrdem(ref sql, ordem, "c.nome");
+                sql.AppendFormat(" ORDER BY {0}", !string.IsNullOrEmpty(ordem) ? ordem : "c.nome");
                 UtilBD.AppendPaginacao(ref sql, pagina, tamPagina);
 
                 ret = db.Database.Connection.Query<CidadeViewModel>(sql.ToString(), parameters).ToList();

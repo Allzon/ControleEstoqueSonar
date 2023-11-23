@@ -52,20 +52,12 @@ namespace ControleEstoque.Web.Models
                 var sql = new StringBuilder("SELECT * FROM perfil ");
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    sql.Append(" WHERE LOWER(nome) LIKE @filtro");
+                    UtilBD.AppendFiltro(ref sql);
                     parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
-                if (!string.IsNullOrEmpty(ordem))
-                    sql.Append(" ORDER BY " + ordem);
-                else
-                    sql.Append(" ORDER BY c.nome");
-
-                if (pagina > 0 && tamPagina > 0)
-                {
-                    var pos = (pagina - 1) * tamPagina;
-                    sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
-                }
+                UtilBD.AppendOrdem(ref sql, ordem);
+                UtilBD.AppendPaginacao(ref sql, pagina, tamPagina);
 
                 ret = db.Database.Connection.Query<PerfilModel>(sql.ToString(), parameters).ToList();
             }

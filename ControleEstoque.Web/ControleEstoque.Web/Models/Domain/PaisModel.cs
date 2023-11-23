@@ -53,15 +53,9 @@ namespace ControleEstoque.Web.Models
                     parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
-                UtilBD.AppendOrdem(ref sql, ordem, "nome");
-
-                if (pagina > 0 && tamPagina > 0)
-                {
-                    var pos = (pagina - 1) * tamPagina;
-                    sql.AppendFormat(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", pos > 0 ? pos - 1 : 0, tamPagina);
-                }
+                UtilBD.AppendOrdem(ref sql, ordem);
+                UtilBD.AppendPaginacao(ref sql, pagina, tamPagina);
                 
-
                 ret = db.Database.Connection.Query<PaisModel>(sql.ToString(), parameters).ToList();
             }
 

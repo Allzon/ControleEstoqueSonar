@@ -12,10 +12,9 @@ namespace ControleEstoque.Web.Models
                 sql.Append(" WHERE LOWER(nome) LIKE @filtro");
         }
 
-        public static void AppendOrdem(ref StringBuilder sql, string ordem, string def)
+        public static void AppendOrdem(ref StringBuilder sql, string ordem)
         {
-            var order = !string.IsNullOrEmpty(ordem) ? ordem : def;
-            sql.AppendFormat($" ORDER BY {order}");
+            sql.AppendFormat(" ORDER BY {0}", !string.IsNullOrEmpty(ordem) ? ordem : "nome");
         }
         
         public static void AppendPaginacao(ref StringBuilder sql, int pagina, int tamPagina)
