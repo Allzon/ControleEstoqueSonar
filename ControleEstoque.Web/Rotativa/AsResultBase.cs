@@ -117,7 +117,7 @@ namespace Rotativa
             var fields = this.GetType().GetProperties();
             foreach (var fi in fields)
             {
-                var of = fi.GetCustomAttributes(typeof(OptionFlagAttribute), true).FirstOrDefault() as OptionFlagAttribute;
+                var of = fi.GetCustomAttributes(typeof(OptionFlag), true).FirstOrDefault() as OptionFlag;
                 if (of == null)
                     continue;
 
@@ -189,7 +189,7 @@ namespace Rotativa
 
             var fileContent = this.CallTheDriver(context);
 
-            if (string.IsNullOrEmpty(this.SaveOnServerPath))
+            if (string.IsNullOrEmpty(this.SaveOnServerPath) == false)
             {
                 File.WriteAllBytes(this.SaveOnServerPath, fileContent);
             }

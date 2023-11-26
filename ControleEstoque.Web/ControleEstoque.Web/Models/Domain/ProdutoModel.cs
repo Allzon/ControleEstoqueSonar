@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
-using System.Globalization;
 using System.Linq;
 
 namespace ControleEstoque.Web.Models
@@ -213,30 +212,37 @@ namespace ControleEstoque.Web.Models
         public static string SalvarPedido(DateTime data, Dictionary<int, int> produtos, string nomeTabela, bool entrada)
         {
             var ret = "";
-            using (var db = new ContextoBD())
+
+            try
             {
-                db.Database.Connection.Open();
-
-                var numPedido = db.Database.Connection.ExecuteScalar<int>($"select next value for sec_{nomeTabela}").ToString("D10");
-
-                using (var transacao = db.Database.Connection.BeginTransaction())
+                using (var db = new ContextoBD())
                 {
-                    foreach (var produto in produtos)
+                    db.Database.Connection.Open();
+
+                    var numPedido = db.Database.Connection.ExecuteScalar<int>($"select next value for sec_{nomeTabela}").ToString("D10");
+
+                    using (var transacao = db.Database.Connection.BeginTransaction())
                     {
-                        var sql = $"insert into {nomeTabela} (numero, data, id_produto, quant) values (@numero, @data, @id_produto, @quant)";
-                        var parametrosInsert = new { numero = numPedido, data, id_produto = produto.Key, quant = produto.Value };
-                        db.Database.Connection.Execute(sql, parametrosInsert, transacao);
+                        foreach (var produto in produtos)
+                        {
+                            var sql = $"insert into {nomeTabela} (numero, data, id_produto, quant) values (@numero, @data, @id_produto, @quant)";
+                            var parametrosInsert = new { numero = numPedido, data, id_produto = produto.Key, quant = produto.Value };
+                            db.Database.Connection.Execute(sql, parametrosInsert, transacao);
 
-                        var sinal = (entrada ? "+" : "-");
-                        sql = $"update produto set quant_estoque = quant_estoque {sinal} @quant_estoque where (id = @id)";
-                        var parametrosUpdate = new { id = produto.Key, quant_estoque = produto.Value };
-                        db.Database.Connection.Execute(sql, parametrosUpdate, transacao);
+                            var sinal = (entrada ? "+" : "-");
+                            sql = $"update produto set quant_estoque = quant_estoque {sinal} @quant_estoque where (id = @id)";
+                            var parametrosUpdate = new { id = produto.Key, quant_estoque = produto.Value };
+                            db.Database.Connection.Execute(sql, parametrosUpdate, transacao);
+                        }
+
+                        transacao.Commit();
+
+                        ret = numPedido;
                     }
-
-                    transacao.Commit();
-
-                    ret = numPedido;
                 }
+            }
+            catch (Exception ex)
+            {
             }
 
             return ret;
@@ -288,7 +294,7 @@ namespace ControleEstoque.Web.Models
                     db.SaveChanges();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 ret = false;
             }
@@ -341,7 +347,7 @@ namespace ControleEstoque.Web.Models
         {
             var ret = new List<ProdutoComDiferencaEmInventarioViewModel>();
 
-            var data = DateTime.Parse(inventario.Split(',')[0], new CultureInfo("en-US"));
+            var data = DateTime.ParseExact(inventario.Split(',')[0], "dd/MM/yyyy", null);
             var idLocal = Int32.Parse(inventario.Split(',')[1]);
 
             using (var db = new ContextoBD())
@@ -380,7 +386,7 @@ namespace ControleEstoque.Web.Models
                     db.SaveChanges();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 ret = false;
             }
