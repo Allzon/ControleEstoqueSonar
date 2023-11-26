@@ -3,7 +3,6 @@ using ControleEstoque.Web.Helpers;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -62,18 +61,29 @@ namespace ControleEstoque.Web.Models
 
             using (var db = new ContextoBD())
             {
-                var parameters = new DynamicParameters();
-                var sql = new StringBuilder("SELECT * FROM Usuario ");
+                var filtroWhere = "";
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    UtilBD.AppendFiltro(ref sql);
-                    parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
+                    filtroWhere = string.Format(" WHERE LOWER(nome) LIKE '%{0}%'", filtro.ToLower());
                 }
-                
-                UtilBD.AppendOrdem(ref sql, ordem);
-                UtilBD.AppendPaginacao(ref sql, pagina, tamPagina);
 
-                ret = db.Database.Connection.Query<UsuarioModel>(sql.ToString(), parameters).ToList();
+                string sql;
+                if (pagina == -1 || tamPagina == -1)
+                {
+                    sql = "SELECT * FROM Usuario" + filtroWhere + " ORDER BY " +
+                        (!string.IsNullOrEmpty(ordem) ? ordem : "nome");
+                }
+                else
+                {
+                    var pos = (pagina - 1) * tamPagina;
+                    sql = string.Format(
+                        "SELECT * FROM Usuario " +
+                        filtroWhere +
+                        " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
+                        " OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
+                        pos > 0 ? pos - 1 : 0, tamPagina);
+                }
+                ret = db.Database.Connection.Query<UsuarioModel>(sql).ToList();
             }
             return ret;
         }

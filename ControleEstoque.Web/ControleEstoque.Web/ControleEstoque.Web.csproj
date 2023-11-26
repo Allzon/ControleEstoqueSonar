@@ -209,7 +209,6 @@
       <DependentUpon>201808082017298_inicial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
-    <Compile Include="Models\UtilBD.cs" />
     <Compile Include="Models\ViewModel\AlteracaoSenhaUsuarioViewModel.cs" />
     <Compile Include="Models\Binders\EntradaSaidaProdutoViewModelModelBinder.cs" />
     <Compile Include="Models\ContextoBD.cs" />
