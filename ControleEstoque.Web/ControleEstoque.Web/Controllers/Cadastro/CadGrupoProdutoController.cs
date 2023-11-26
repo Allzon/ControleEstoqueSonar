@@ -83,7 +83,7 @@ namespace ControleEstoque.Web.Controllers
                         resultado = "ERRO";
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     resultado = "ERRO";
                 }

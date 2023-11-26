@@ -2,11 +2,11 @@
 
 namespace Rotativa.Options
 {
-    class OptionFlagAttribute : Attribute
+    class OptionFlag : Attribute
     {
         public string Name { get; private set; }
 
-        public OptionFlagAttribute(string name)
+        public OptionFlag(string name)
         {
             Name = name;
         }
