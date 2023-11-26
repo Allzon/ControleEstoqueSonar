@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -82,18 +81,37 @@ namespace ControleEstoque.Web.Models
 
             using (var db = new ContextoBD())
             {
-                var parametros = new DynamicParameters();
-                var sql = new StringBuilder("SELECT * FROM Fornecedor");                
+                //conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
+                //conexao.Open();
+
+                var filtroWhere = "";
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    UtilBD.AppendFiltro(ref sql);
-                    parametros.Add("@filtro", $"'%{filtro.ToLower()}%'");
+                    filtroWhere = string.Format(" WHERE LOWER(nome) LIKE '%{0}%'", filtro.ToLower());
                 }
 
-                UtilBD.AppendFiltro(ref sql);
-                UtilBD.AppendOrdem(ref sql, ordem);
+                var paginacao = "";
+                var pos = (pagina - 1) * tamPagina;
+                if (pagina > 0 && tamPagina > 0)
+                {
+                    paginacao = string.Format(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
+                    pos > 0 ? pos - 1 : 0, tamPagina);
+                }
 
-                ret = db.Database.Connection.Query<FornecedorModel>(sql.ToString(), parametros).ToList();                
+                //comando.Connection = conexao;
+                //comando.CommandText =
+                var sql =
+                    "SELECT * FROM Fornecedor" +
+                    filtroWhere +
+                    " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
+                    paginacao;
+                ret = db.Database.Connection.Query<FornecedorModel>(sql).ToList();
+                //var reader = comando.ExecuteReader();
+
+                //while (reader.Read())
+                //{
+                //    ret.Add(MontarFornecedor(reader));
+                //}
             }
 
             return ret;

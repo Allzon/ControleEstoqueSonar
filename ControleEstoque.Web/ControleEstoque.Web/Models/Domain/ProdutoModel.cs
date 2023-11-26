@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -53,27 +52,36 @@ namespace ControleEstoque.Web.Models
             var ret = new List<ProdutoModel>();
 
             using (var db = new ContextoBD())
-            {                
-                var parameters = new DynamicParameters();
-                var sql = new StringBuilder("select id, codigo, nome, ativo, imagem, preco_custo as PrecoCusto, preco_venda as PrecoVenda, " +
-                    "quant_estoque as QuantEstoque, id_unidade_medida as IdUnidadeMedida, id_grupo as IdGrupo, id_marca as IdMarca, id_fornecedor as IdFornecedor, " +
-                    "id_local_armazenamento as IdLocalArmazenamento from produto");
-
+            {
+                var filtroWhere = "";
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    UtilBD.AppendFiltro(ref sql);
-                    parameters.Add("@filtro", $"%{filtro.ToLower()}%");
+                    filtroWhere = string.Format("where (lower(nome) like '%{0}%') ", filtro.ToLower());
                 }
 
                 if (somenteAtivos)
                 {
-                    sql.Append((string.IsNullOrEmpty(filtro) ? "where" : "and ") + "(ativo = 1) ");
+                    filtroWhere = (string.IsNullOrEmpty(filtroWhere) ? "where" : "and ") + "(ativo = 1) ";
                 }
 
-                UtilBD.AppendOrdem(ref sql, ordem);
-                UtilBD.AppendPaginacao(ref sql, pagina, tamPagina);
+                var pos = (pagina - 1) * tamPagina;
+                var paginacao = "";
+                if (pagina > 0 && tamPagina > 0)
+                {
+                    paginacao = string.Format(" offset {0} rows fetch next {1} rows only",
+                        pos > 0 ? pos - 1 : 0, tamPagina);
+                }
 
-                ret = db.Database.Connection.Query<ProdutoModel>(sql.ToString(), parameters).ToList();
+                var sql =
+                    "select id, codigo, nome, ativo, imagem, preco_custo as PrecoCusto, preco_venda as PrecoVenda, " +
+                    "quant_estoque as QuantEstoque, id_unidade_medida as IdUnidadeMedida, id_grupo as IdGrupo, " +
+                    "id_marca as IdMarca, id_fornecedor as IdFornecedor, id_local_armazenamento as IdLocalArmazenamento " +
+                    "from produto " +
+                    filtroWhere +
+                    "order by " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
+                    paginacao;
+
+                ret = db.Database.Connection.Query<ProdutoModel>(sql).ToList();
             }
 
             return ret;

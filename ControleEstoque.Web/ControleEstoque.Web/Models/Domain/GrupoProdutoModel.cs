@@ -1,9 +1,7 @@
-﻿using ControleEstoque.Web.ServicesCorreios;
-using Dapper;
+﻿using Dapper;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -55,18 +53,34 @@ namespace ControleEstoque.Web.Models
             var ret = new List<GrupoProdutoModel>();
 
             using (var db = new ContextoBD())
-            {                
-                var parameters = new DynamicParameters();
-                var sql = new StringBuilder("SELECT * FROM tb_grupoProdutos ");
+            {
+                //conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
+                //conexao.Open();
+
+                var filtroWhere = "";
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    UtilBD.AppendFiltro(ref sql);
-                    parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
+                    filtroWhere = string.Format(" WHERE LOWER(nome) LIKE '%{0}%'", filtro.ToLower());
                 }
-                UtilBD.AppendOrdem(ref sql, ordem);
-                UtilBD.AppendPaginacao(ref sql, pagina, tamPagina);                
 
-                ret = db.Database.Connection.Query<GrupoProdutoModel>(sql.ToString(), parameters).ToList();
+                var pos = (pagina - 1) * tamPagina;
+
+                //comando.Connection = conexao;
+                //comando.CommandText =
+                var sql = string.Format(
+                    "SELECT * FROM tb_grupoProdutos " +
+                    filtroWhere +
+                    " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
+                    " OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
+                    pos, tamPagina);
+
+                ret = db.Database.Connection.Query<GrupoProdutoModel>(sql).ToList();
+                //var reader = comando.ExecuteReader();
+
+                //while (reader.Read())
+                //{
+                //    ret.Add(MontarGrupoProduto(reader));
+                //}
             }
 
             return ret;
