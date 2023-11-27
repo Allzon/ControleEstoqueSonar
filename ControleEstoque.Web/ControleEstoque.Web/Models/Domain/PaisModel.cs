@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -42,36 +43,20 @@ namespace ControleEstoque.Web.Models
             var ret = new List<PaisModel>();
 
             using (var db = new ContextoBD())
-            {
-                var filtroWhere = "";
+            {                
+                var parameters = new DynamicParameters();
+                var sql = new StringBuilder("SELECT * FROM pais ");
+
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = string.Format(" WHERE LOWER(nome) LIKE '%{0}%'", filtro.ToLower());
+                    sql.Append(" WHERE LOWER(nome) LIKE @filtro");
+                    parameters.Add("@filtro", $"'%{filtro.ToLower()}%'");
                 }
 
-                var paginacao = "";
-                var pos = (pagina - 1) * tamPagina;
-
-                if (pagina > 0 && tamPagina > 0)
-                {
-                    paginacao = string.Format(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
-                       pos > 0 ? pos - 1 : 0, tamPagina);
-                }
-
-                var sql =
-                    "SELECT * FROM pais " +
-                    filtroWhere +
-                    " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "nome") +
-                    paginacao;
-
-                ret = db.Database.Connection.Query<PaisModel>(sql).ToList();
-
-                //var reader = comando.ExecuteReader();
-
-                //while (reader.Read())
-                //{
-                //    ret.Add(MontarPais(reader));
-                //}
+                UtilBD.AppendOrdem(ref sql, ordem);
+                UtilBD.AppendPaginacao(ref sql, pagina, tamPagina);
+                
+                ret = db.Database.Connection.Query<PaisModel>(sql.ToString(), parameters).ToList();
             }
 
             return ret;

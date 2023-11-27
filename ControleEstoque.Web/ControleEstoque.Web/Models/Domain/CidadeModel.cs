@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Text;
 
 namespace ControleEstoque.Web.Models
 {
@@ -57,44 +58,25 @@ namespace ControleEstoque.Web.Models
 
             using (var db = new ContextoBD())
             {
-                //conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
-                //conexao.Open();
-
-                var filtroWhere = "";
+                var parameters = new DynamicParameters();
+                var sql = new StringBuilder("SELECT c.id, c.nome, c.ativo, c.id_estado as IdEstado, e.id_pais as IdPais, e.nome as NomeEstado, p.nome as NomePais FROM cidade c, estado e, pais p WHERE (c.id_estado = e.id) AND (e.id_pais = p.id)");
+                
                 if (!string.IsNullOrEmpty(filtro))
                 {
-                    filtroWhere = string.Format(" (LOWER(c.nome) LIKE '%{0}%') AND", filtro.ToLower());
+                    UtilBD.AppendFiltro(ref sql);
+                    parameters.Add("@filtro", $"%{filtro.ToLower()}%");
                 }
-
+                
                 if (idEstado > 0)
                 {
-                    filtroWhere += string.Format(" (id_estado = {0}) AND", idEstado);
+                    sql.Append(" AND (id_estado = @Id_Estado)");
+                    parameters.Add("@Id_Estado", idEstado);
                 }
 
-                var paginacao = "";
-                var pos = (pagina - 1) * tamPagina;
-                if (pagina > 0 && tamPagina > 0)
-                {
-                    paginacao = string.Format(" OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY",
-                    pos > 0 ? pos - 1 : 0, tamPagina);
-                }
+                sql.AppendFormat(" ORDER BY {0}", !string.IsNullOrEmpty(ordem) ? ordem : "c.nome");
+                UtilBD.AppendPaginacao(ref sql, pagina, tamPagina);
 
-                //comando.Connection = conexao;
-                //comando.CommandText =
-                var sql =
-                        "SELECT c.id, c.nome, c.ativo, c.id_estado as IdEstado, e.id_pais as IdPais, " +
-                        "e.nome as NomeEstado, p.nome as NomePais FROM cidade c, estado e, pais p WHERE " +
-                        filtroWhere +
-                        " (c.id_estado = e.id) AND (e.id_pais = p.id)" +
-                        " ORDER BY " + (!string.IsNullOrEmpty(ordem) ? ordem : "c.nome") +
-                        paginacao;
-                ret = db.Database.Connection.Query<CidadeViewModel>(sql).ToList();
-                //var reader = comando.ExecuteReader();
-
-                //while (reader.Read())
-                //{
-                //    ret.Add(MontarCidade(reader));
-                //}
+                ret = db.Database.Connection.Query<CidadeViewModel>(sql.ToString(), parameters).ToList();
             }
             return ret;
         }
